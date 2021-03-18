@@ -86,6 +86,7 @@ public class VaccineApp {
         String category = inputAnswer("Provide the category: ");
         try{
             String query = "SELECT * FROM PATIENT WHERE hinsurenum = "+hinsurenum;
+            System.out.println(query);
             java.sql.ResultSet resultset = statement.executeQuery(query);
             //Make sure its not already in database
             if(resultset.next()){
@@ -102,6 +103,7 @@ public class VaccineApp {
                                 +toSQL(streetAddress)+", patientpostalcode = "
                                 +toSQL(postalCode)+", category = "
                                 +toSQL(category)+" WHERE hinsurenum = "+hinsurenum;
+                        System.out.println(updateQuery);
                         statement.executeUpdate(updateQuery);
                         System.out.println(name +"\'s personal information was successfully updated");
                     }
@@ -119,6 +121,7 @@ public class VaccineApp {
             else{
                 try{
                     String insertquery = "INSERT INTO PATIENT (hinsurenum,patientname,phonenumber,dateofbirth,gender,registrationdate,patientcity,patientstreetaddress,patientpostalcode,numofdoses,category) VALUES ("+hinsurenum+", "+toSQL(name)+", "+toSQL(phone)+", "+toSQL(birthday)+", "+toSQL(gender)+", "+toSQL(registrationdate)+", "+toSQL(city)+", "+toSQL(streetAddress)+", "+toSQL(postalCode)+",0 ,"+toSQL(category)+")";
+                    System.out.println(insertquery);
                     statement.executeUpdate(insertquery);
                     System.out.println("Added "+name+" to the database");
                 }
@@ -159,8 +162,8 @@ public class VaccineApp {
             }
 
             System.out.println("Available slots: ");
-            //Todo
             String query = "SELECT vaccslot, stime, vaccdate, locname FROM SLOT WHERE hinsurenum is NULL and vaccdate > CURRENT_DATE";
+            System.out.println(query);
             java.sql.ResultSet resultset = statement.executeQuery(query);
             while(resultset.next()){
                 int slotID = resultset.getInt(1);
@@ -174,6 +177,7 @@ public class VaccineApp {
             String selectedLocation = inputAnswer("Location chosen: ");
 
             boolean valid = false;
+            System.out.println(query);
             java.sql.ResultSet verification = statement.executeQuery(query);
             while(verification.next()){
                 if (Integer.parseInt(selectedSlotID) == verification.getInt(1) && selectedLocation.equals(verification.getString(4))) {
@@ -185,6 +189,7 @@ public class VaccineApp {
             if (valid == true){
                 try{
                     String updateSQL = "UPDATE SLOT SET hinsurenum = "+toSQL(hinsurenum)+", dateassigned = CURRENT_DATE WHERE (vaccslot, locname) = ("+toSQL(selectedSlotID)+", "+toSQL(selectedLocation)+")";
+                    System.out.println(updateSQL);
                     statement.executeUpdate(updateSQL);
                     System.out.println("Added Resident to Slot "+selectedSlotID+" at "+selectedLocation);
                 }
@@ -293,9 +298,10 @@ public class VaccineApp {
         int doses = 2;
         try{
             String requiredDosesQuery = "SELECT requiredose FROM VACCINE WHERE vaccinename in (SELECT vaccinename FROM SLOT WHERE hinsurenum = "+toSQL(insurenum)+" limit 1)";
+            System.out.println(requiredDosesQuery);
             ResultSet result = statement.executeQuery(requiredDosesQuery);
             while(result.next()){
-                doses = result.getInt(2); //second column?
+                doses = result.getInt("requiredose");
             }
         } catch (SQLException e) {
             sqlCode = e.getErrorCode(); // Get SQLCODE
@@ -314,10 +320,11 @@ public class VaccineApp {
 
         // Get number of doses that the person has recieved
         try{
-            String dosesRecievedQuery = "SELECT * FROM SLOT WHERE hinsurenum = "+ insurenum;
+            String dosesRecievedQuery = "SELECT COUNT(*) FROM SLOT WHERE hinsurenum = "+ insurenum;
+            System.out.println(dosesRecievedQuery);
             ResultSet result = statement.executeQuery ( dosesRecievedQuery ) ;
             while (result.next()){
-                doses = result.getInt("numofdoses");
+                doses = result.getInt("1");
             }
         }
         catch(SQLException e) {
